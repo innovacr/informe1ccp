@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe 90 Días - Junta Directiva Condado del Parque</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Condado Nature Harmony (Warm Slate, Sage Green, Crisp White, Soft Beige background) -->
+    <!-- Application Structure Plan: The SPA is structured as a modern management dashboard to make the 90-day progress easily digestible. 
+         1. Hero/Intro: Establishes context, board purpose, and time frame.
+         2. Vista General (Charts): Quantifies qualitative data to show activity levels (meetings) and the balanced distribution of achievements across areas. This provides immediate impact.
+         3. Logros Interactivos: A filterable grid of the 11 achievements. Users can click categories to filter, making the long list explorable rather than overwhelming.
+         4. Proyectos en Proceso: Clear visual cards for ongoing tasks.
+         5. Hub de Comités: An interactive tabbed interface to explore committee progress and contact info without cluttering the page.
+         6. Comunidad (Tips/Contact): A dedicated section for resident action items.
+         This structure transforms a static document into an exploratory tool, prioritizing user engagement and data clarity. -->
+    <!-- Visualization & Content Choices: 
+         - Meeting Stats -> Goal: Inform -> Donut Chart (Chart.js) -> Justification: Shows proportion of JD vs Committee focus.
+         - Achievements by Area -> Goal: Organize/Compare -> Bar Chart (Chart.js) -> Justification: Translates a text list into a visual metric showing balanced board action across Tech, Admin, Infra, and Community.
+         - 11 Achievements Details -> Goal: Inform/Organize -> Interactive Filterable Grid (HTML/JS) -> Justification: Prevents wall-of-text, allows user-driven exploration.
+         - Committee Updates -> Goal: Organize -> Interactive Tabs (HTML/JS) -> Justification: Keeps layout clean while housing specific updates and contact names. 
+         Library/Method: Chart.js for charts, Vanilla JS for filtering/tabs. HTML Unicode for icons. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 350px; }
+        }
+
+        .tab-btn.active {
+            background-color: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+        
+        .filter-btn.active {
+            background-color: #0f172a;
+            color: white;
+        }
+
+        .icon-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            font-size: 1.25rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <span class="text-2xl">&#127970;</span>
+                    <span class="font-bold text-lg tracking-wide">Condado del Parque</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#inicio" class="hover:bg-slate-700 px-3 py-2 rounded-md text-sm font-medium transition">Inicio</a>
+                        <a href="#resumen" class="hover:bg-slate-700 px-3 py-2 rounded-md text-sm font-medium transition">Métricas</a>
+                        <a href="#logros" class="hover:bg-slate-700 px-3 py-2 rounded-md text-sm font-medium transition">Logros</a>
+                        <a href="#comites" class="hover:bg-slate-700 px-3 py-2 rounded-md text-sm font-medium transition">Comités</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header id="inicio" class="bg-emerald-700 text-white py-16 lg:py-24 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <p class="text-emerald-200 font-semibold tracking-wider uppercase mb-2">17 de mayo de 2026</p>
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-6">Informe de los primeros 90 días de gestión</h1>
+            <p class="text-xl md:text-2xl text-emerald-100 max-w-3xl mx-auto font-light">
+                Junta Directiva elegida el 31 de enero.
+            </p>
+            
+            <div class="mt-10 bg-white/10 backdrop-blur-md rounded-xl p-6 md:p-8 text-left max-w-4xl mx-auto border border-emerald-500/30">
+                <h2 class="text-2xl font-bold mb-4 flex items-center gap-2"><span class="text-emerald-300">&#128269;</span> Nuestra Función</h2>
+                <p class="text-emerald-50 leading-relaxed text-lg">
+                    Somos un órgano compuesto por 5 personas voluntarias. Nuestro compromiso no es resolver problemas particulares de los residentes (labor de la administración), sino <strong>fiscalizar, establecer controles y realizar correcciones</strong> sobre la gestión administrativa. Nuestro objetivo es que el condominio se mantenga en óptimas condiciones de operación y convivencia, siguiendo las disposiciones de la asamblea y los reglamentos.
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <section id="resumen" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-800">Métricas de Gestión</h2>
+                <p class="mt-4 text-slate-600 max-w-2xl mx-auto">
+                    Un resumen cuantitativo del esfuerzo y las áreas de enfoque de la Junta Directiva durante este primer trimestre, categorizando nuestras principales acciones.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="bg-slate-50 rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <h3 class="text-xl font-semibold text-center mb-6 text-slate-700">Sesiones de Trabajo Realizadas</h3>
+                    <div class="chart-container">
+                        <canvas id="sesionesChart"></canvas>
+                    </div>
+                    <p class="text-center text-sm text-slate-500 mt-4">Total de 12 reuniones estratégicas ejecutadas.</p>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <h3 class="text-xl font-semibold text-center mb-6 text-slate-700">Distribución de Logros por Área</h3>
+                    <div class="chart-container">
+                        <canvas id="areasChart"></canvas>
+                    </div>
+                    <p class="text-center text-sm text-slate-500 mt-4">11 acciones concretas ejecutadas de forma equilibrada.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="logros" class="py-16 bg-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-slate-800">Principales Logros Alcanzados</h2>
+                <p class="mt-4 text-slate-600 max-w-2xl mx-auto">
+                    Explora las acciones concretadas en los últimos 3 meses. Selecciona una categoría para filtrar los resultados.
+                </p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-3 mb-10" id="filter-container">
+                <button class="filter-btn active px-5 py-2 rounded-full border border-slate-300 font-medium transition" data-filter="all">Todos</button>
+                <button class="filter-btn bg-white hover:bg-slate-200 text-slate-700 px-5 py-2 rounded-full border border-slate-300 font-medium transition" data-filter="tech">&#128187; Tecnología</button>
+                <button class="filter-btn bg-white hover:bg-slate-200 text-slate-700 px-5 py-2 rounded-full border border-slate-300 font-medium transition" data-filter="admin">&#128188; Administración</button>
+                <button class="filter-btn bg-white hover:bg-slate-200 text-slate-700 px-5 py-2 rounded-full border border-slate-300 font-medium transition" data-filter="infra">&#127975; Infraestructura</button>
+                <button class="filter-btn bg-white hover:bg-slate-200 text-slate-700 px-5 py-2 rounded-full border border-slate-300 font-medium transition" data-filter="comunidad">&#129309; Comunidad</button>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="logros-grid">
+            </div>
+        </div>
+    </section>
+
+    <section id="proyectos" class="py-16 bg-emerald-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12">Proyectos en Proceso</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="bg-emerald-800 rounded-xl p-8 border border-emerald-700 hover:bg-emerald-700 transition duration-300">
+                    <div class="text-4xl mb-4">&#128699;</div>
+                    <h3 class="text-2xl font-bold mb-3 text-emerald-100">Evaluación de Ascensores</h3>
+                    <p class="text-emerald-50 opacity-90">
+                        Estamos valorando exhaustivamente la situación actual y la vida útil de los ascensores del condominio para planificar acciones preventivas.
+                    </p>
+                </div>
+
+                <div class="bg-emerald-800 rounded-xl p-8 border border-emerald-700 hover:bg-emerald-700 transition duration-300">
+                    <div class="text-4xl mb-4">&#128680;</div>
+                    <h3 class="text-2xl font-bold mb-3 text-emerald-100">Seguridad Perimetral</h3>
+                    <p class="text-emerald-50 opacity-90">
+                        En colaboración con el Comité de Infraestructura, estamos evaluando el reforzamiento de los puntos vulnerables en el perímetro, incluyendo sectores norte y sur.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="comites" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-800">Comités de Apoyo</h2>
+                <p class="mt-4 text-slate-600 max-w-3xl mx-auto">
+                    Los comités se establecieron como grupos de apoyo clave. Agradecemos su compromiso; demuestran que todos podemos aportar con propuestas. A continuación, sus avances y coordinadores.
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden">
+                <div class="lg:w-1/3 bg-slate-100 p-4 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col gap-2" id="tab-buttons">
+                </div>
+                
+                <div class="lg:w-2/3 p-8 bg-white" id="tab-content">
+                </div>
+            </div>
+
+            <div class="mt-12 bg-emerald-50 rounded-xl p-8 text-center border border-emerald-100">
+                <h3 class="text-2xl font-bold text-emerald-800 mb-4">&#128172; ¡Únete a la Comunidad!</h3>
+                <p class="text-emerald-700 mb-6 max-w-2xl mx-auto">
+                    Aún queda mucho por hacer. Invitamos a todos los residentes (propietarios e inquilinos) a seguir colaborando constructivamente con ideas, conocimientos y tiempo.
+                </p>
+                <a href="mailto:juntadirectiva@condadodelparque.cr" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition">
+                    &#9993; Contactar a la Junta Directiva
+                </a>
+                <p class="mt-3 text-sm text-emerald-600 font-medium">juntadirectiva@condadodelparque.cr</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-slate-900 text-slate-300 py-12 border-t-4 border-emerald-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 gap-12">
+                
+                <div>
+                    <h3 class="text-white text-xl font-bold mb-6 flex items-center gap-2">&#128161; Notas y Consejos Útiles</h3>
+                    <div class="space-y-6">
+                        <div class="bg-slate-800 rounded-lg p-5 border border-slate-700">
+                            <h4 class="text-emerald-400 font-semibold mb-2 flex items-center gap-2">&#128167; Consumo de Agua</h4>
+                            <p class="text-sm leading-relaxed">Les invitamos a revisar periódicamente sus recibos de agua. En ocasiones, un incremento inusual en el consumo puede deverse a fugas internas silenciosas, especialmente en los tanques de los inodoros.</p>
+                        </div>
+                        <div class="bg-slate-800 rounded-lg p-5 border border-slate-700">
+                            <h4 class="text-emerald-400 font-semibold mb-2 flex items-center gap-2">&#128065; Control de Calidad</h4>
+                            <p class="text-sm leading-relaxed">Como residentes y propietarios, todos compartimos la responsabilidad de fiscalizar la calidad de los servicios recibidos. Recuerden reportar cualquier inconveniente primero a través de la administración. La comunidad la construimos todos.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-white text-xl font-bold mb-6 flex items-center gap-2">&#128219; Información de Contacto (Comités)</h3>
+                    <p class="mb-4 text-sm">Para sumarte y apoyar a áreas específicas, contacta a los coordinadores (haz clic en su nombre para escribirles por WhatsApp):</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-center gap-3 bg-slate-800/50 p-3 rounded-md">
+                            <div class="bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center text-sm">&#129309;</div>
+                            <div>
+                                <span class="block text-white font-medium">Integración Vecinal</span>
+                                <span class="text-sm text-slate-300">
+                                    <a href="https://wa.me/83376496?text=me%20interesa%20m%C3%A1s%20informaci%C3%B3n%20acerca%20del%20comit%C3%A9%20en%20condado%20del%20parque" target="_blank" class="hover:text-emerald-400 hover:underline transition">Anniel Céspedes</a>
+                                </span>
+                            </div>
+                        </li>
+                        <li class="flex items-center gap-3 bg-slate-800/50 p-3 rounded-md">
+                            <div class="bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center text-sm">&#128736;</div>
+                            <div>
+                                <span class="block text-white font-medium">Mantenimiento, Infraestructura y Proyectos</span>
+                                <span class="text-sm text-slate-300">
+                                    <a href="https://wa.me/71528141?text=me%20interesa%20m%C3%A1s%20informaci%C3%B3n%20acerca%20del%20comit%C3%A9%20en%20condado%20del%20parque" target="_blank" class="hover:text-emerald-400 hover:underline transition">Franklin Sánchez</a>
+                                </span>
+                            </div>
+                        </li>
+                        <li class="flex items-center gap-3 bg-slate-800/50 p-3 rounded-md">
+                            <div class="bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center text-sm">&#128680;</div>
+                            <div>
+                                <span class="block text-white font-medium">Seguridad y Emergencias</span>
+                                <span class="text-sm text-slate-300">
+                                    <a href="https://wa.me/88864260?text=me%20interesa%20m%C3%A1s%20informaci%C3%B3n%20acerca%20del%20comit%C3%A9%20en%20condado%20del%20parque" target="_blank" class="hover:text-emerald-400 hover:underline transition">Janet Quirós</a>
+                                </span>
+                            </div>
+                        </li>
+                        <li class="flex items-center gap-3 bg-slate-800/50 p-3 rounded-md">
+                            <div class="bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center text-sm">&#128200;</div>
+                            <div>
+                                <span class="block text-white font-medium">Financiero, Legal y Administrativo</span>
+                                <span class="text-sm">Mauricio Ureña</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-12 pt-8 border-t border-slate-800 text-center text-sm text-slate-500">
+                &copy; 2026 Junta Directiva Condado del Parque. Generado para visualización interactiva.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const achievementsData = [
+                { id: 1, category: 'tech', icon: '&#128187;', title: 'Repositorio de Actas con IA', desc: 'Implementación de IA tipo chat para consultar el repositorio de actas de asamblea desde 2016. <a href="https://notebooklm.google.com/notebook/20d3e109-f49e-4220-b9b5-261890c66707" target="_blank" class="text-emerald-600 hover:underline text-sm font-semibold mt-2 block">Acceder al sistema &#8594;</a>' },
+                { id: 2, category: 'tech', icon: '&#9881;', title: 'Gestión Interna con IA', desc: 'Sistema en línea para consultar acuerdos de juntas (desde 2019) y herramienta para redactar actas de reuniones de forma expedita y completa.' },
+                { id: 3, category: 'admin', icon: '&#128202;', title: 'Fiscalización Administrativa', desc: 'Monitoreo mensual a la administración para garantizar cumplimiento con CCSS, Tributación e INS. Fiscalización constante de cuentas e inversiones.' },
+                { id: 4, category: 'admin', icon: '&#128176;', title: 'Corrección en Facturación', desc: 'Insistencia firme y logros significativos en la corrección de errores presentados en la facturación de cuotas de mantenimiento a inicios de año.' },
+                { id: 5, category: 'infra', icon: '&#128295;', title: 'Resolución de Alcantarillado', desc: 'Seguimiento continuo a la administración sobre el problema de alcantarillado del AyA, logrando su resolución definitiva.' },
+                { id: 6, category: 'comunidad', icon: '&#128104;&#8205;&#9877;&#65039;', title: 'Salud Ocupacional', desc: 'Propuesta solicitada para medidas de salud de los 5 colaboradores del condominio. Actualmente en revisión por el Comité de Infraestructura.' },
+                { id: 7, category: 'admin', icon: '&#9201;', title: 'Monitoreo de Respuesta', desc: 'Inicio del proceso de lectura de datos (no sensibles) en la app Aditum para monitorear tiempos de respuesta de reportes y casos.' },
+                { id: 8, category: 'infra', icon: '&#127807;', title: 'Mejoras Estéticas', desc: 'Embellecimiento activo del frente de la torre B mediante la cobertura del talud con plantas y malla geotextil.' },
+                { id: 9, category: 'infra', icon: '&#128275;', title: 'Apertura de Áreas Comunes', desc: 'Apertura diurna del Salón Seta y segundo piso de la casa club, incluyendo internet (sujeto a disponibilidad sin eventos reservados).' },
+                { id: 10, category: 'comunidad', icon: '&#128220;', title: 'Normas de Convivencia', desc: 'Consolidación y aprobación oficial de las Normas en la asamblea extraordinaria del 28 de febrero.' },
+                { id: 11, category: 'comunidad', icon: '&#9878;', title: 'Reclamo de Espacio Aéreo', desc: 'Gestión formal activada contra la desarrolladora Sensia por invasión temporal semanas pasadas en el espacio aéreo cerca de torre A.' },
+            ];
+
+            const grid = document.getElementById('logros-grid');
+            const renderGrid = (filter) => {
+                grid.innerHTML = '';
+                const filteredData = filter === 'all' ? achievementsData : achievementsData.filter(d => d.category === filter);
+                
+                filteredData.forEach(item => {
+                    const card = document.createElement('div');
+                    let badgeColor = 'bg-slate-200 text-slate-700';
+                    let catName = 'Otro';
+                    
+                    if(item.category === 'tech') { badgeColor = 'bg-blue-100 text-blue-800'; catName = 'Tecnología'; }
+                    if(item.category === 'admin') { badgeColor = 'bg-purple-100 text-purple-800'; catName = 'Administración'; }
+                    if(item.category === 'infra') { badgeColor = 'bg-orange-100 text-orange-800'; catName = 'Infraestructura'; }
+                    if(item.category === 'comunidad') { badgeColor = 'bg-emerald-100 text-emerald-800'; catName = 'Comunidad'; }
+
+                    card.className = 'bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition duration-200 flex flex-col h-full';
+                    card.innerHTML = `
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="bg-slate-50 border border-slate-100 text-2xl w-12 h-12 rounded-lg flex items-center justify-center shadow-inner">
+                                ${item.icon}
+                            </div>
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${badgeColor}">${catName}</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">${item.title}</h3>
+                        <p class="text-slate-600 text-sm flex-grow">${item.desc}</p>
+                    `;
+                    grid.appendChild(card);
+                });
+            };
+
+            renderGrid('all');
+
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    filterBtns.forEach(b => {
+                        b.classList.remove('active', 'bg-slate-900', 'text-white');
+                        b.classList.add('bg-white', 'text-slate-700');
+                    });
+                    
+                    e.target.classList.add('active', 'bg-slate-900', 'text-white');
+                    e.target.classList.remove('bg-white', 'text-slate-700');
+                    
+                    renderGrid(e.target.dataset.filter);
+                });
+            });
+
+            const ctxSesiones = document.getElementById('sesionesChart').getContext('2d');
+            new Chart(ctxSesiones, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sesiones Junta Directiva', 'Reuniones con Comités'],
+                    datasets: [{
+                        data: [8, 4],
+                        backgroundColor: ['#0f172a', '#10b981'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Inter' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + context.raw + ' reuniones';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            const ctxAreas = document.getElementById('areasChart').getContext('2d');
+            new Chart(ctxAreas, {
+                type: 'bar',
+                data: {
+                    labels: ['Tecnología', 'Administración', 'Infraestructura', 'Comunidad'],
+                    datasets: [{
+                        label: 'Cant. de Logros',
+                        data: [2, 3, 3, 3],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)', 
+                            'rgba(168, 85, 247, 0.8)', 
+                            'rgba(249, 115, 22, 0.8)', 
+                            'rgba(16, 185, 129, 0.8)'  
+                        ],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter' } } },
+                        x: { ticks: { font: { family: 'Inter' } } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            const committeesData = [
+                {
+                    id: 'emergencias',
+                    title: 'Emergencias y Seguridad',
+                    coord: 'Janet Quirós',
+                    icon: '&#128680;',
+                    desc: 'En conjunto con la junta, se logró una alianza estratégica entre empresas y la institución educativa vecina. El objetivo es buscar soluciones definitivas a la situación de la casa abandonada propiedad del BCR.',
+                    status: 'Activo con plan en revisión continua'
+                },
+                {
+                    id: 'infraestructura',
+                    title: 'Infraestructura y Mantenimiento',
+                    coord: 'Franklin Sánchez',
+                    icon: '&#128736;',
+                    desc: '<ul class="list-disc pl-5 space-y-2 mt-2"><li>Aprobación de un sistema de control de labores para personal de mantenimiento. Se evaluarán próximamente los resultados del primer mes y medio de uso.</li><li>Colaboración en propuestas de nuevas prácticas para disminuir significativamente el ruido de los portones.</li></ul>',
+                    status: 'Activo con plan en revisión continua'
+                },
+                {
+                    id: 'vecinal',
+                    title: 'Integración Vecinal',
+                    coord: 'Anniel Céspedes',
+                    icon: '&#129309;',
+                    desc: 'Comité activado exitosamente. Actualmente trabajando bajo el plan estructurado del año para fomentar la sana convivencia y participación comunitaria.',
+                    status: 'Activo con plan en revisión continua'
+                },
+                {
+                    id: 'financiero',
+                    title: 'Financiero y Legal',
+                    coord: 'Mauricio Ureña',
+                    icon: '&#128200;',
+                    desc: 'Comité activado exitosamente, brindando soporte analítico a la Junta Directiva en temas administrativos y de cumplimiento normativo.',
+                    status: 'Activo con plan en revisión continua'
+                }
+            ];
+
+            const tabContainer = document.getElementById('tab-buttons');
+            const contentContainer = document.getElementById('tab-content');
+
+            const renderCommittee = (id) => {
+                const data = committeesData.find(c => c.id === id);
+                contentContainer.innerHTML = `
+                    <div class="animate-fade-in">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="bg-emerald-100 text-emerald-700 text-3xl w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner">
+                                ${data.icon}
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-800">${data.title}</h3>
+                                <p class="text-sm text-emerald-600 font-medium flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> ${data.status}</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-100 rounded-lg p-4 mb-6 inline-block">
+                            <p class="text-sm text-slate-500 uppercase tracking-wide font-semibold mb-1">Coordinación</p>
+                            <p class="text-lg font-medium text-slate-800 flex items-center gap-2">&#128100; ${data.coord}</p>
+                        </div>
+                        <div class="prose text-slate-700 leading-relaxed">
+                            <h4 class="text-lg font-semibold mb-2">Avances Recientes:</h4>
+                            <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+                                ${data.desc}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('bg-white', 'border-emerald-500', 'shadow-sm');
+                    btn.classList.add('hover:bg-slate-200', 'border-transparent');
+                });
+                const activeBtn = document.getElementById(`btn-${id}`);
+                activeBtn.classList.remove('hover:bg-slate-200', 'border-transparent');
+                activeBtn.classList.add('bg-white', 'border-emerald-500', 'shadow-sm');
+            };
+
+            committeesData.forEach((c, index) => {
+                const btn = document.createElement('button');
+                btn.id = `btn-${c.id}`;
+                btn.className = `tab-btn text-left px-4 py-3 rounded-lg border-l-4 transition duration-200 font-medium text-slate-700 flex items-center gap-3`;
+                btn.innerHTML = `<span>${c.icon}</span> <span>${c.title}</span>`;
+                btn.onclick = () => renderCommittee(c.id);
+                tabContainer.appendChild(btn);
+            });
+
+            renderCommittee(committeesData[0].id);
+        });
+    </script>
+</body>
+</html>
